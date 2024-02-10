@@ -1,5 +1,8 @@
-# Env
+# Test Env
 env
+
+# dist build dir
+dist
 
 # Editor tmp files
 *.swp
