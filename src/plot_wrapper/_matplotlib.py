@@ -3,7 +3,7 @@ import time
 
 import rpyc
 
-from _plot_wrapper import WrapperService
+from ._plot_wrapper import WrapperService
 
 
 class MatplotlibWrapper:

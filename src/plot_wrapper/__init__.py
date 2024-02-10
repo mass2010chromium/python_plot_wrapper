@@ -1,1 +1,1 @@
-from _matplotlib import MatplotlibWrapper
+from ._matplotlib import MatplotlibWrapper
