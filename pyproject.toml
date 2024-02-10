@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling", "rpyc"]
+build-backend = "hatchling.build"
+
+[project]
+name = "plot_wrapper"
+version = "0.0.1"
+authors = [
+  { name="mass2010chromium", email="mass2010chromium@github.com" },
+]
+description = "A small example package"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/pypa/sampleproject"
+Issues = "https://github.com/pypa/sampleproject/issues"

@@ -1,0 +1,6 @@
+# Env
+env
+
+# Editor tmp files
+*.swp
+*.editor_log.txt
