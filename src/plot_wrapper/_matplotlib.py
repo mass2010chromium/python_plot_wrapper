@@ -3,8 +3,6 @@ import time
 
 import rpyc
 
-from ._plot_wrapper import WrapperService
-
 
 class MatplotlibWrapper:
     """
@@ -27,6 +25,7 @@ class MatplotlibWrapper:
         """
         Spawn the matplotlib-running process. Uses rpyc to do communication.
         """
+        self.__client = None
         def spawn_mpl_wrapper(port_val):
             try:
                 import matplotlib.pyplot as plt
@@ -77,10 +76,11 @@ class MatplotlibWrapper:
 
     def stop(self):
         #print("Stopping server")
-        try:
-            self.__client.root.stop()
-        except EOFError:
-            pass
+        if self.__client is not None:
+            try:
+                self.__client.root.stop()
+            except EOFError:
+                pass
         self.__server_proc.join()
         #print("Stopped server.")
 
@@ -96,6 +96,7 @@ class MatplotlibWrapper:
         self.stop()
 
 if __name__ == "__main__":
+    from _plot_wrapper import WrapperService
     plt = MatplotlibWrapper()
     plt.start()
     plt.figure(0)
@@ -103,3 +104,6 @@ if __name__ == "__main__":
     plt.show()
 
     plt.stop()
+else:
+    from ._plot_wrapper import WrapperService
+

@@ -1,3 +1,4 @@
+import numpy as np
 import rpyc
 
 class WrapperService(rpyc.Service):
@@ -34,4 +35,12 @@ class WrapperService(rpyc.Service):
         if name == "stop":
             return self.exposed_stop
         return getattr(self.wrap_obj, name)
+
+def netref_to_array(obj, dtype=float):
+    try:
+        len(obj)
+    except TypeError:
+        return dtype(obj)
+    res = np.array([netref_to_array(l) for l in obj])
+    return res
 
