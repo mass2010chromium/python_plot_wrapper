@@ -6,10 +6,10 @@ import numpy as np
 import rpyc
 
 if __name__ == "__main__":
-    from _plot_wrapper import WrapperService, netref_to_array
+    from _plot_wrapper import WrapperService
     import _brine_o3d_patch
 else:
-    from ._plot_wrapper import WrapperService, netref_to_array
+    from ._plot_wrapper import WrapperService
     from . import _brine_o3d_patch
 
 class O3dVisWrapperService(WrapperService):
