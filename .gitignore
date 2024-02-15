@@ -4,6 +4,8 @@ env
 # dist build dir
 dist
 
+__pycache__
+
 # Editor tmp files
 *.swp
 *.editor_log.txt
