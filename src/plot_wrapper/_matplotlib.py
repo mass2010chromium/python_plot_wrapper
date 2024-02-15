@@ -97,10 +97,12 @@ class MatplotlibWrapper:
 
 if __name__ == "__main__":
     from _plot_wrapper import WrapperService
+    import numpy as np
+    import _brine_array_patch
     plt = MatplotlibWrapper()
     plt.start()
     plt.figure(0)
-    plt.plot([1, 2], [1, 2])
+    plt.plot(np.array([1, 2]), [1, 2])
     plt.show()
 
     plt.stop()

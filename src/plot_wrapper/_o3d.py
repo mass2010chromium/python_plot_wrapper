@@ -7,8 +7,10 @@ import rpyc
 
 if __name__ == "__main__":
     from _plot_wrapper import WrapperService, netref_to_array
+    import _brine_o3d_patch
 else:
     from ._plot_wrapper import WrapperService, netref_to_array
+    from . import _brine_o3d_patch
 
 class O3dVisWrapperService(WrapperService):
     """
@@ -59,21 +61,21 @@ class O3dVisWrapperService(WrapperService):
         self.o3d_run_thread.join()
         self.o3d_run_thread = None
 
-    def exposed_add_geometry(self, geometry, reset_bounding_box=True):
-        if isinstance(geometry, self.o3d.geometry.TriangleMesh):
-            geom = self.o3d.geometry.TriangleMesh()
-            geom.vertices = self.o3d.utility.Vector3dVector(netref_to_array(geometry.vertices))
-            geom.triangles = self.o3d.utility.Vector3iVector(netref_to_array(geometry.triangles, dtype=int))
-            geometry = geom
-        self.wrap_obj.add_geometry(geometry, reset_bounding_box=reset_bounding_box)
+#    def exposed_add_geometry(self, geometry, reset_bounding_box=True):
+#        if isinstance(geometry, self.o3d.geometry.TriangleMesh):
+#            geom = self.o3d.geometry.TriangleMesh()
+#            geom.vertices = self.o3d.utility.Vector3dVector(netref_to_array(geometry.vertices))
+#            geom.triangles = self.o3d.utility.Vector3iVector(netref_to_array(geometry.triangles, dtype=int))
+#            geometry = geom
+#        self.wrap_obj.add_geometry(geometry, reset_bounding_box=reset_bounding_box)
 
     def _rpyc_getattr(self, name):
         if name == "spin":
             return self.exposed_spin
         if name == "pause":
             return self.exposed_pause
-        if name == "add_geometry":
-            return self.exposed_add_geometry
+        #if name == "add_geometry":
+        #    return self.exposed_add_geometry
         return super()._rpyc_getattr(name)
 
 
