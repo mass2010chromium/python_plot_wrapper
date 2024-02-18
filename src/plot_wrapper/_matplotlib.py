@@ -1,10 +1,12 @@
-import multiprocessing as mp
-import time
+if __name__ == "__main__":
+    from _plot_wrapper import WrapperService, AsyncWrapperService, ServiceHost
+    import _brine_array_patch
+else:
+    from ._plot_wrapper import WrapperService, AsyncWrapperService, ServiceHost
+    from . import _brine_array_patch
 
-import rpyc
 
-
-class MatplotlibWrapper:
+class MatplotlibWrapper(ServiceHost):
     """
     Start matplotlib in a separate process, so opengl doesn't fight with other visualizers.
 
@@ -20,85 +22,57 @@ class MatplotlibWrapper:
 
     Notably matplotlib is never imported in the parent process.
     """
-    
-    def start(self, sleep_dt=1):
-        """
-        Spawn the matplotlib-running process. Uses rpyc to do communication.
-        """
-        self.__client = None
-        def spawn_mpl_wrapper(port_val):
-            try:
-                import matplotlib.pyplot as plt
-            except ImportError:
-                print("Error import matplotlib... maybe it's not installed?")
-                port_val.value = -1
-                return -1
 
-            # Janky way to pass the server object to the service after it's created.
-            server_ptr = []
-            # Default port = 0 means pick a port for me.
-            server = rpyc.utils.server.OneShotServer(WrapperService(plt, server_ptr))
-            server_ptr.append(server)
+    def create_wrapper_service(self, **kwargs):
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print("Error import matplotlib... maybe it's not installed?")
+            port_val.value = -1
+            return (-1, None)
 
-            # Communicate the assigned port back via shared memory.
-            port_val.value = server.port
+        return (0, WrapperService(plt))
 
-            # Copied from rpyc server implementation.
-            # https://github.com/tomerfiliba-org/rpyc/blob/master/rpyc/utils/server.py#L258
-            server._listen()
-            server._register()
-            try:
-                while server.active:
-                    server.accept()
-            except EOFError:
-                pass  # server closed by another thread
-            except KeyboardInterrupt:
-                print("")
-                server.logger.warning("keyboard interrupt!")
-            finally:
-                server.logger.info("server has terminated")
-                server.close()
-            return 0
+class InteractiveMatplotlibWrapper(ServiceHost):
+    """
+    Start matplotlib in a separate process, so opengl doesn't fight with other visualizers.
+    Starts interactive matplotlib (plt.ion()).
 
-        # Set to nonzero when the child starts correctly. Set it back to zero as a termination signal.
-        self.__port_val = mp.Value('i', 0)
-        self.__server_proc = mp.Process(target=spawn_mpl_wrapper, args=(self.__port_val,))
-        self.__server_proc.start()
-        while self.__port_val.value == 0:
-            #print("Waiting for server to start...")
-            time.sleep(sleep_dt)
+    ```
+    # instead of importing, you can do this
+    plt = MatplotlibWrapper()
+    plt.start()
 
-        if self.__port_val.value == -1:
-            # Import error. server did not start correctly
-            return self.__server_proc.join()
-        self.__client = rpyc.connect('localhost', self.__port_val.value)
-        return 0
+    ...matplotlib commands...
 
-    def stop(self):
-        #print("Stopping server")
-        if self.__client is not None:
-            try:
-                self.__client.root.stop()
-            except EOFError:
-                pass
-        self.__server_proc.join()
-        #print("Stopped server.")
+    plt.stop()
+    ```
 
-    # Forward all calls to rpyc.
-    def __getattr__(self, name):
-        return getattr(self.__client.root, name)
+    Notably matplotlib is never imported in the parent process.
+    """
 
+    def create_wrapper_service(self, **kwargs):
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print("Error import matplotlib... maybe it's not installed?")
+            port_val.value = -1
+            return (-1, None)
 
-    # Implement Python contextmanager ( with x as MatplotlibWrapper(): )
-    def __enter__(self):
-        self.start()
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.stop()
+        plt.ion()
+
+        # Real spinrate is half this lol
+        # half spent on plot, half on polling the server
+        spinrate = kwargs.get("spinrate", 80)
+
+        def spin_mpl():
+            """Helper function to poll for events from the open3d visualizer window."""
+            plt.pause(1/spinrate)
+        return (0, AsyncWrapperService(plt, spin_mpl, spinrate=spinrate))
+
 
 if __name__ == "__main__":
-    from _plot_wrapper import WrapperService
     import numpy as np
-    import _brine_array_patch
     plt = MatplotlibWrapper()
     plt.start()
     plt.figure(0)
@@ -106,6 +80,21 @@ if __name__ == "__main__":
     plt.show()
 
     plt.stop()
-else:
-    from ._plot_wrapper import WrapperService
+
+    plt = InteractiveMatplotlibWrapper()
+    plt.start()
+    plt.figure(0)
+
+    x = np.array([1.0, 2.0])
+    import time
+    import rpyc
+    clf = rpyc.async_(plt.clf)
+    plot = rpyc.async_(plt.plot)
+    for i in range(40):
+        x += 0.05
+        plt.clf()
+        plt.plot(x, [1, 2])
+        time.sleep(0.05)
+
+    plt.stop()
 
