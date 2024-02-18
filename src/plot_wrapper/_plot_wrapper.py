@@ -99,7 +99,9 @@ class AsyncWrapperService(WrapperService):
         while self.active:
             self.vis_spin()
             try:
-                conn.poll(timeout=self.dt)
+                res = True
+                while res:
+                    res = conn.poll(timeout=self.dt)
             except EOFError:
                 break
 

@@ -53,6 +53,7 @@ class InteractiveMatplotlibWrapper(ServiceHost):
 
     def create_wrapper_service(self, **kwargs):
         try:
+            import matplotlib
             import matplotlib.pyplot as plt
         except ImportError:
             print("Error import matplotlib... maybe it's not installed?")
@@ -67,7 +68,12 @@ class InteractiveMatplotlibWrapper(ServiceHost):
 
         def spin_mpl():
             """Helper function to poll for events from the open3d visualizer window."""
-            plt.pause(1/spinrate)
+            figManager = matplotlib._pylab_helpers.Gcf.get_active()
+            if figManager is not None:
+                canvas = figManager.canvas
+                if canvas.figure.stale:
+                    canvas.draw()
+                canvas.start_event_loop(1/spinrate)
         return (0, AsyncWrapperService(plt, spin_mpl, spinrate=spinrate))
 
 
