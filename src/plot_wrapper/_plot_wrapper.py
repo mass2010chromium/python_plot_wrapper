@@ -44,7 +44,7 @@ class WrapperService(rpyc.Service):
         port_val:   Shared memory that we need to report the server port back to.
         """
         # Default port = 0 means pick a port for me.
-        server = rpyc.utils.server.OneShotServer(self)
+        server = rpyc.utils.server.OneShotServer(self, protocol_config={'allow_all_attrs': True})
         self.server = server
 
         # Communicate the assigned port back via shared memory.
@@ -107,7 +107,7 @@ class AsyncWrapperService(WrapperService):
 
     def start_server(self, port_val):
         # Default port = 0 means pick a port for me.
-        server = rpyc.utils.server.OneShotServer(self)
+        server = rpyc.utils.server.OneShotServer(self, protocol_config={'allow_all_attrs': True})
         self.server = server
 
         # Communicate the assigned port back via shared memory.
@@ -136,7 +136,7 @@ class ServiceHost:
         self.__client = None
         def spawn_vis_wrapper(port_val):
             # Janky way to pass the server object to the service after it's created.
-            error, vis_obj = self.create_wrapper_service()
+            error, vis_obj = self.create_wrapper_service(**kwargs)
             if error != 0:
                 return error
 
@@ -172,9 +172,11 @@ class ServiceHost:
         return getattr(self.__client.root, name)
 
 
-    # Implement Python contextmanager ( with x as MatplotlibWrapper(): )
+    # Implement Python contextmanager ( with MatplotlibWrapper() as x: )
     def __enter__(self):
         self.start()
+        return self
+
     def __exit__(self, exc_type, exc_value, traceback):
         self.stop()
 

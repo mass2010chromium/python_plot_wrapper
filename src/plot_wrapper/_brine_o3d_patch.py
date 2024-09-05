@@ -21,13 +21,13 @@ import open3d as o3d
 
 @register(brine._custom_dumpable)
 def _dumpable_o3d(obj):
-    if isinstance(obj, o3d.geometry.TriangleMesh):
+    if type(obj) == o3d.geometry.TriangleMesh:
         return True
-    if isinstance(obj, o3d.geometry.PointCloud):
+    if type(obj) == o3d.geometry.PointCloud:
         return True
-    if isinstance(obj, o3d.utility.Vector3iVector):
+    if type(obj) == o3d.utility.Vector3iVector:
         return True
-    if isinstance(obj, o3d.utility.Vector3dVector):
+    if type(obj) == o3d.utility.Vector3dVector:
         return True
     return False
 
