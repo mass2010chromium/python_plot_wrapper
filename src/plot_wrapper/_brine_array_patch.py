@@ -8,7 +8,25 @@ except ImportError:
     from ._brine_patch import register
 import numpy as np
 
-NP_TYPES = list(itertools.chain(v for v in np.sctypes.values()))
+# Annoyed that numpy removed a nice way of enumerating this
+NP_TYPES = [
+    np.bool_,
+    np.int8,
+    np.int16,
+    np.int32,
+    np.int64,
+    np.uint8,
+    np.uint16,
+    np.uint32,
+    np.uint64,
+    np.float16,
+    np.float32,
+    np.float64,
+    np.complex64,
+    np.complex128,
+    np.int_,
+    np.float_,
+]
 
 @register(brine._custom_dumpable)
 def _dumpable_numpy(obj):
