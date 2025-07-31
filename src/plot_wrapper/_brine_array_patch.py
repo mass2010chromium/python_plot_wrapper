@@ -35,7 +35,7 @@ try:
 
     @register(brine._custom_dumpable)
     def _dumpable_numpy(obj):
-        return type(obj) in NP_TYPES or type(obj) == np.ndarray
+        return type(obj) in NP_TYPES or (type(obj) == np.ndarray and obj.dtype != object)
 
     @register(brine._custom_loaders)
     def _load_array(stream):
@@ -59,7 +59,7 @@ try:
     @register(brine._custom_dumpers)
     def _dump_numpy(obj, stream):
         ret = True
-        if type(obj) == np.ndarray:
+        if type(obj) == np.ndarray and obj.dtype != object:
             _dump_array(obj, stream)
         elif type(obj) in NP_INTEGER:
             brine._dump_int(obj, stream)
