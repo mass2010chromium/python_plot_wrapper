@@ -24,6 +24,6 @@ fig, (a1, a2) = plt.subplots(1, 2)
 a1.plot([0, 1], [1, 2])
 a2.plot([1, 2], [3, 4])
 
-input()
+input("Press enter to exit")
 
 plt.stop()
