@@ -24,7 +24,7 @@ class WrapperService(rpyc.Service):
     def on_disconnect(self, conn):
         pass
 
-    def vis_spin(self):
+    def wrapper_spin(self):
         """Update visualizer window here."""
         pass
     
@@ -89,7 +89,7 @@ class AsyncWrapperService(WrapperService):
         self.dt = 1 / spinrate
         self.active = False
 
-    def vis_spin(self):
+    def wrapper_spin(self):
         """Update visualizer window here."""
         self.spin_func()
     
@@ -97,7 +97,7 @@ class AsyncWrapperService(WrapperService):
         """Listen for server events and update visualizer window in the same thread."""
         self.active = True
         while self.active:
-            self.vis_spin()
+            self.wrapper_spin()
             try:
                 res = True
                 while res:
@@ -134,7 +134,7 @@ class ServiceHost:
         Spawn the o3d visualizer-running process. Uses rpyc to do communication.
         """
         self.__client = None
-        def spawn_vis_wrapper(port_val):
+        def spawn_wrapper(port_val):
             # Janky way to pass the server object to the service after it's created.
             error, vis_obj = self.create_wrapper_service(**kwargs)
             if error != 0:
@@ -145,7 +145,7 @@ class ServiceHost:
 
         # Set to nonzero when the child starts correctly. Set it back to zero as a termination signal.
         self.__port_val = mp.Value('i', 0)
-        self.__server_proc = mp.Process(target=spawn_vis_wrapper, args=(self.__port_val,))
+        self.__server_proc = mp.Process(target=spawn_wrapper, args=(self.__port_val,))
         self.__server_proc.start()
         while self.__port_val.value == 0:
             #print("Waiting for server to start...")

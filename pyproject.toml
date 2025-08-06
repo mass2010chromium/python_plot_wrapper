@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "plot_wrapper"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="mass2010chromium", email="mass2010chromium@github.com" },
 ]
