@@ -1,5 +1,5 @@
 """Patch brine dump/load core functionality to make it easier to extend."""
-from rpyc.core import brine
+from rpyc.core import brine, netref
 
 brine.TAG_CUSTOM = b"\x1c"
 
@@ -20,6 +20,8 @@ def dumpable(obj):
         return all(dumpable(item) for item in obj)
     if type(obj) is slice:
         return dumpable(obj.start) and dumpable(obj.stop) and dumpable(obj.step)
+    if type(type(obj)) == netref.NetrefMetaclass:
+        return False
     for dumpable_check in brine._custom_dumpable:
         if dumpable_check(obj):
             return True
@@ -40,6 +42,8 @@ def _dump(obj, stream):
         brine._dump_registry.get(type(obj))(obj, stream)
         #print(stream[i:])
         return
+    if type(obj) == netref:
+        brine._undumpable(obj, stream)
     for dumper in brine._custom_dumpers:
         if dumper(obj, stream):
             #print(stream[i:])

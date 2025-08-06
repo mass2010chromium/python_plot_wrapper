@@ -9,7 +9,7 @@ class WrapperService(rpyc.Service):
     Useful for "objects" that have APIs, like python modules.
     """
 
-    def __init__(self, wrap_obj):
+    def __init__(self, wrap_obj, server_class=rpyc.utils.server.OneShotServer):
         """
         Parameters:
         -------------------
@@ -17,6 +17,7 @@ class WrapperService(rpyc.Service):
         """
         self.wrap_obj = wrap_obj
         self.server = None
+        self.server_class = server_class
 
     def on_connect(self, conn):
         pass
@@ -36,7 +37,7 @@ class WrapperService(rpyc.Service):
             return self.exposed_stop
         return getattr(self.wrap_obj, name)
 
-    def start_server(self, port_val):
+    def start_server(self, port_val=None, requested_port=0):
         """Spin up the rpyc server.
 
         Parameters:
@@ -44,16 +45,19 @@ class WrapperService(rpyc.Service):
         port_val:   Shared memory that we need to report the server port back to.
         """
         # Default port = 0 means pick a port for me.
-        server = rpyc.utils.server.OneShotServer(self, protocol_config={'allow_all_attrs': True})
+        server = self.server_class(self, port=requested_port, protocol_config={'allow_all_attrs': True})
         self.server = server
 
-        # Communicate the assigned port back via shared memory.
-        port_val.value = server.port
+        if port_val is not None:
+            # Communicate the assigned port back via shared memory.
+            port_val.value = server.port
 
         # Copied from rpyc server implementation.
         # https://github.com/tomerfiliba-org/rpyc/blob/master/rpyc/utils/server.py#L258
         server._listen()
         server._register()
+
+        interrupted = False
         try:
             while server.active:
                 server.accept()
@@ -61,10 +65,12 @@ class WrapperService(rpyc.Service):
             pass  # server closed by another thread
         except KeyboardInterrupt:
             print("")
-            server.logger.warning("keyboard interrupt!")
+            server.logger.warning("Wrapper: keyboard interrupt!")
+            interrupted = True
         finally:
-            server.logger.info("server has terminated")
+            server.logger.info("Wrapper: server has terminated")
             server.close()
+            return interrupted
 
 
 class AsyncWrapperService(WrapperService):
@@ -74,7 +80,7 @@ class AsyncWrapperService(WrapperService):
         Open3D Visualizer windows or Matplotlib interactive sessions.
     """
 
-    def __init__(self, wrap_obj, spin_func, spinrate=20):
+    def __init__(self, wrap_obj, spin_func, spinrate=20, server_class=rpyc.utils.server.OneShotServer):
         """
         Parameters:
         -------------------
@@ -84,7 +90,7 @@ class AsyncWrapperService(WrapperService):
 
         spinrate:       Float               FPS to spin at
         """
-        super().__init__(wrap_obj)
+        super().__init__(wrap_obj, server_class=server_class)
         self.spin_func = spin_func
         self.dt = 1 / spinrate
         self.active = False
@@ -105,18 +111,20 @@ class AsyncWrapperService(WrapperService):
             except EOFError:
                 break
 
-    def start_server(self, port_val):
+    def start_server(self, port_val=None, requested_port=0):
         # Default port = 0 means pick a port for me.
-        server = rpyc.utils.server.OneShotServer(self, protocol_config={'allow_all_attrs': True})
+        server = self.server_class(self, port=requested_port, protocol_config={'allow_all_attrs': True})
         self.server = server
 
-        # Communicate the assigned port back via shared memory.
-        port_val.value = server.port
+        if port_val is not None:
+            # Communicate the assigned port back via shared memory.
+            port_val.value = server.port
 
         try:
-            spin_server_singlethread(server, self.spin)
+            interrupted = spin_server_singlethread(server, self.spin)
         finally:
             self.active = False
+            return interrupted
 
 
 class ServiceHost:
@@ -196,6 +204,8 @@ def spin_server_singlethread(server, spin_callback):
     from rpyc.core import SocketStream, Channel
     server._listen()
     server._register()
+
+    interrupted = False
     try:
         # IMPLEMENT: server.accept()
         print("waiting for conn")
@@ -243,8 +253,10 @@ def spin_server_singlethread(server, spin_callback):
         pass  # server closed by another thread
     except KeyboardInterrupt:
         print("")
-        server.logger.warning("keyboard interrupt!")
+        server.logger.warning("Wrapper: keyboard interrupt!")
+        interrupted = True
     finally:
-        server.logger.info("server has terminated")
+        server.logger.info("Wrapper: server has terminated")
         server.close()
+        return interrupted
 

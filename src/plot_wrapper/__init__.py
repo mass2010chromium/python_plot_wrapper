@@ -1,5 +1,7 @@
 from . import _brine_array_patch
 from . import _brine_torch_patch
+from . import _brine_PIL_patch
+# Maybe, load modules on demand?
 
 from ._plot_wrapper import WrapperService, AsyncWrapperService, ServiceHost
 

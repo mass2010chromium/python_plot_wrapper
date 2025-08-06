@@ -1,6 +1,4 @@
 """load/dump monkeypatch functions for pytorch tensors. Converts them to numpy arrays"""
-import itertools
-
 from rpyc.core import brine
 try:
     from _brine_patch import register
