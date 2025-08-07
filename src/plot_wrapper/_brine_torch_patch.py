@@ -37,7 +37,10 @@ try:
         torch.complex64,
         torch.complex128,
     ]
-    TORCH_TYPES = TORCH_INTEGER + TORCH_FLOAT + TORCH_COMPLEX
+    TORCH_SIZE = [
+        torch.Size
+    ]
+    TORCH_TYPES = TORCH_INTEGER + TORCH_FLOAT + TORCH_COMPLEX + TORCH_SIZE
 
     @register(brine._custom_dumpable)
     def _dumpable_torch(obj):
@@ -48,6 +51,8 @@ try:
         ret = True
         if torch.is_tensor(obj):
             _dump_array(obj.detach().cpu().numpy(), stream)
+        elif type(obj) in TORCH_SIZE:
+            brine._dump_tuple(obj, stream)
         elif type(obj) in TORCH_INTEGER:
             brine._dump_int(obj, stream)
         elif type(obj) in TORCH_FLOAT:
