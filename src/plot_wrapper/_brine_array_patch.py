@@ -80,7 +80,7 @@ try:
         brine._dump_int(_load_array_object.id, stream)
         brine._dump_tuple(obj.shape, stream)
         for elem in obj.reshape(-1, copy=False):
-            brine._dump(elem)
+            brine._dump(elem, stream)
 
     @register(brine._custom_dumpers)
     def _dump_numpy(obj, stream):
