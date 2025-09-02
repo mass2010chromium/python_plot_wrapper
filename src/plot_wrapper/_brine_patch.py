@@ -44,6 +44,7 @@ def _dump(obj, stream):
         return
     if type(obj) == netref:
         brine._undumpable(obj, stream)
+        return
     for dumper in brine._custom_dumpers:
         if dumper(obj, stream):
             #print(stream[i:])
