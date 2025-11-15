@@ -1,3 +1,4 @@
+import importlib
 import multiprocessing as mp
 import time
 
@@ -35,7 +36,12 @@ class WrapperService(rpyc.Service):
     def _rpyc_getattr(self, name):
         if name == "stop":
             return self.exposed_stop
+        elif name == "_import":
+            return self._import
         return getattr(self.wrap_obj, name)
+
+    def _import(self, name):
+        return importlib.import_module(name)
 
     def start_server(self, port_val=None, requested_port=0):
         """Spin up the rpyc server.
@@ -162,7 +168,7 @@ class ServiceHost:
         if self.__port_val.value == -1:
             # Import error. server did not start correctly
             return self.__server_proc.join()
-        self.__client = rpyc.connect('localhost', self.__port_val.value, config={'allow_public_attrs' : True})
+        self.__client = rpyc.connect('localhost', self.__port_val.value, config={'allow_public_attrs' : True, 'sync_request_timeout': -1})
         return 0
 
     def stop(self):
